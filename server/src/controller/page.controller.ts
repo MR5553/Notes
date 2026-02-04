@@ -94,14 +94,11 @@ const getPageById = async (req: Request, res: Response) => {
 const updatePageContent = async (req: Request, res: Response) => {
     try {
         const { pageId } = req.params;
-        const { title, content } = req.body;
+        const { title, icon, cover } = req.body;
 
         const updated = await Pages.findByIdAndUpdate(
             pageId,
-            {
-                title,
-                content
-            },
+            { title, icon, cover },
             { new: true }
         );
 
