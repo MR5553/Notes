@@ -1,7 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { model, Schema } from "mongoose";
-import { type userType } from "../types/user.type";
+import { type userType } from "../types/type";
+
 
 const userSchema = new Schema<userType>({
     name: {
