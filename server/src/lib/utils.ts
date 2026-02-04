@@ -1,6 +1,6 @@
 import type { CookieOptions } from "express";
 import { Users } from "../models/user.model";
-import type { userType } from "../types/user.type";
+import type { userType } from "../types/type";
 
 
 export async function generateToken(userId: string) {

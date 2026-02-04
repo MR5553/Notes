@@ -52,12 +52,7 @@ export interface Workspace extends Document {
         user: Schema.Types.ObjectId;
         role: "owner" | "admin" | "editor" | "viewer";
     }[];
-    settings: {
-        theme: "light" | "dark" | "system";
-        allowComments: boolean;
-        allowSharing: boolean;
-        defaultPageView: "list" | "grid";
-    };
+    active: boolean;
     visibility: string;
     inviteLinks: {
         email: string;
