@@ -10,7 +10,9 @@ import db from "./db/db";
 db();
 
 
-const PORT = process.env.PORT || 5553;
+const PORT = Number(process.env.PORT || 5553);
+const HOST = process.env.HOST || "0.0.0.0";
+
 const app = express();
 
 app.use(express.json());
@@ -31,10 +33,6 @@ app.use(express.urlencoded({ extended: true }));
 app.set("trust proxy", 1);
 app.use(limiter.global);
 
-app.get("/", (_req, res) => {
-    res.json({ message: "Welcome to the API" })
-});
-
 
 import userRoutes from "./routes/user.route";
 import workspaceRoute from "./routes/workspace.route";
@@ -51,7 +49,7 @@ app.use("/api", uploadRoute)
 app.use(GlobalErrorHandler);
 
 
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
     console.log(`server is running at http://localhost:${PORT}`);
 });
 
