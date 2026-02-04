@@ -26,25 +26,9 @@ const workspaceSchema = new Schema<Workspace>(
             required: true,
             index: true,
         },
-        settings: {
-            theme: {
-                type: String,
-                enum: ["light", "dark", "system"],
-                default: "system",
-            },
-            allowComments: {
-                type: Boolean,
-                default: true,
-            },
-            allowSharing: {
-                type: Boolean,
-                default: true,
-            },
-            defaultPageView: {
-                type: String,
-                enum: ["list", "grid"],
-                default: "list",
-            },
+        active: {
+            type: Boolean,
+            default: false
         },
         visibility: {
             type: String,
