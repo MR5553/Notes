@@ -47,3 +47,17 @@ export const sendOtp = async (name = "Munna", email = "munna12112003@gmail.com",
     }
     return transporter.sendMail(option)
 }
+
+export const invite = async (inviterName: string, inviterEmail: string) => {
+    const option: SendMailOptions & { template?: string; context?: any } = {
+        from: "Notion Clone <no-reply@yourapp.com>",
+        to: inviterEmail,
+        subject: "Invitation to join",
+        template: "invite",
+        context: {
+            inviterName,
+            inviterEmail,
+        },
+    }
+    return transporter.sendMail(option)
+}
