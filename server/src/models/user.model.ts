@@ -22,6 +22,16 @@ const userSchema = new Schema<userType>({
         minlength: 8,
         select: false,
     },
+    providers: [
+        {
+            provider: {
+                type: String,
+                enum: ["google", "github", "local"],
+                default: "local"
+            },
+            providerId: { type: String }, // e.g., the Google 'sub' or GitHub 'id'
+        }
+    ],
     avatar: {
         type: String,
         default: "",
@@ -45,20 +55,6 @@ const userSchema = new Schema<userType>({
         default: "",
         select: false,
     },
-    workspaces: [
-        {
-            workspaceId: {
-                type: Schema.Types.ObjectId,
-                ref: "Workspace",
-                required: true,
-            },
-            role: {
-                type: String,
-                enum: ["owner", "admin", "member", "guest"],
-                required: true,
-            },
-        },
-    ],
 }, { timestamps: true });
 
 

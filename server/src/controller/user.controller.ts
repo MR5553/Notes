@@ -102,6 +102,7 @@ const Signin = async (req: Request, res: Response) => {
     }
 }
 
+
 const VerifyEmail = async (req: Request, res: Response) => {
     try {
         const { otp } = req.body;
@@ -400,6 +401,7 @@ const refreshAccessToken = async (req: Request, res: Response) => {
     }
 
 }
+
 
 const changePassword = async (req: Request, res: Response) => {
     try {

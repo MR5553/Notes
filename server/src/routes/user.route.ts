@@ -21,6 +21,7 @@ import {
     Logout,
 } from "../controller/user.controller";
 import { verifyJwtToken } from "../middleware/auth.middleware";
+import { getSignature } from "../controller/upload.controller";
 
 
 const router = Router();
@@ -39,6 +40,8 @@ router.post("/password/change", validate(schema.changePassword), changePassword)
 router.get("/users/me", verifyJwtToken, getProfile);
 router.post("/users/me", verifyJwtToken, validate(schema.profile), updateProfile);
 router.delete("/users/me", verifyJwtToken, validate(schema.password), deleteAccount);
+
+router.post("/uploads/signature", verifyJwtToken, getSignature);
 
 router.post("/auth/logout", verifyJwtToken, Logout);
 router.post("/auth/refresh-access-token", refreshAccessToken);
