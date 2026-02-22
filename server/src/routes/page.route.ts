@@ -3,41 +3,25 @@ import {
     createPage,
     getAllPages,
     getPageById,
-    updatePageContent,
+    updatePage,
+    archivePage,
+    movePage,
+    duplicatePage,
     deletePageById,
 } from "../controller/page.controller";
 import { verifyJwtToken } from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.post(
-    "/workspaces/:workspaceId/pages",
-    verifyJwtToken,
-    createPage
-);
+router.post("/pages", verifyJwtToken, createPage);
+router.get("/pages", verifyJwtToken, getAllPages);
+router.get("/pages/:pageId", verifyJwtToken, getPageById);
+router.patch("/pages/:pageId", verifyJwtToken, updatePage);
+router.patch("/pages/:pageId/archive", verifyJwtToken, archivePage);
+router.patch("/pages/:pageId/move", verifyJwtToken, movePage);
+router.post("/pages/:pageId/duplicate", verifyJwtToken, duplicatePage);
+router.delete("/pages/:pageId", verifyJwtToken, deletePageById);
 
-router.get(
-    "/workspaces/:workspaceId/pages",
-    verifyJwtToken,
-    getAllPages
-);
 
-router.get(
-    "/workspaces/:workspaceId/pages/:pageId",
-    verifyJwtToken,
-    getPageById
-);
-
-router.patch(
-    "/workspaces/:workspaceId/pages/:pageId",
-    verifyJwtToken,
-    updatePageContent
-);
-
-router.delete(
-    "/workspaces/:workspaceId/pages/:pageId",
-    verifyJwtToken,
-    deletePageById
-);
 
 export default router;
