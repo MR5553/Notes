@@ -6,16 +6,15 @@ const blockSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: "Page",
             required: true,
+            unique: true
         },
         content: {
-            type: Object,
+            type: Schema.Types.Mixed,
             required: true,
         },
     },
     { timestamps: true }
 );
-
-blockSchema.index({ pageId: 1, createdAt: 1 });
 
 
 export const Blocks = model("Block", blockSchema);

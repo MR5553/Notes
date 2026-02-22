@@ -5,12 +5,13 @@ import {
     updateBlock,
     deleteBlock,
 } from "../controller/block.controller";
+import { verifyJwtToken } from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.post("/block", createBlock);
-router.get("/page/:pageId/block", getBlockByPage);
-router.patch("page/:blockId/block", updateBlock);
-router.delete("page/:blockId/block", deleteBlock);
+router.post("/block", verifyJwtToken, createBlock);
+router.get("/page/:pageId/block", verifyJwtToken, getBlockByPage);
+router.patch("/block/:pageId", verifyJwtToken, updateBlock);
+router.delete("/block/:pageId", verifyJwtToken, deleteBlock);
 
 export default router;
