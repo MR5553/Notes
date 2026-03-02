@@ -1,4 +1,5 @@
 import { userType } from "./type";
+import mongoose from "mongoose";
 
 declare global {
     namespace Express {
@@ -8,4 +9,11 @@ declare global {
         }
         interface User extends userType { }
     }
+}
+
+declare global {
+    var mongoose: {
+        conn: mongoose | null;
+        promise: Promise<mongoose> | null;
+    };
 }

@@ -1,18 +1,18 @@
 import mongoose from "mongoose";
 
-let cached = (global as any).mongoose;
 
-if (cached) {
-    cached = (global as any).mongoose = {
-        conn: null,
-        promise: null,
-    };
-}
+global.mongoose = global.mongoose || {
+    conn: null,
+    promise: null,
+};
+
+const cached = global.mongoose;
+
 
 export default async function db() {
     if (cached.conn) return cached.conn;
 
-    if (cached.promise) {
+    if (!cached.promise) {
         cached.promise = mongoose.connect(process.env.DATABASE_URL as string).then((mongoose) => {
             console.log("✅ MongoDB connected");
             return mongoose;
