@@ -5,65 +5,48 @@ import { generateToken, option } from "../lib/utils";
 
 
 const router = Router();
+const CLIENT_URL = `${process.env.CLIENT_ORIGIN as string}/auth/success`;
 
 
-router.get("/auth/github", passport.authenticate("github", { scope: ["profile", "email"] }));
-router.get("/auth/github/callback", passport.authenticate("github", {
-    session: false, assignProperty: "oauth",
-}),
+router.get("/auth/github/callback", passport.authenticate("github", { session: false, assignProperty: "auth" }),
     async (req: Request, res: Response) => {
         try {
-            const user = req.oauth as userType;
-
-            if (!user) {
-                return res.redirect(`${process.env.CLIENT_ORIGIN}/sign-in?error=no_user`);
-            }
+            const user = req.auth as userType;
 
             const { accessToken, refreshToken } = await generateToken(user.id);
 
-            return res
-                .status(200)
+            return res.status(200)
                 .cookie("accessToken", accessToken, option.access)
                 .cookie("refreshToken", refreshToken, option.refresh)
-                .redirect(process.env.CLIENT_ORIGIN!);
+                .redirect(CLIENT_URL)
 
         } catch (error) {
             console.error("GitHub login error:", error);
-            res.redirect(
-                `${process.env.CLIENT_ORIGIN}/sign-in?error=oauth_failed`
-            );
+            return res.redirect(CLIENT_URL)
         }
     }
 );
 
 
-router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-router.get("/auth/google/callback", passport.authenticate("google", {
-    session: false, assignProperty: "oauth",
-}),
-
+router.get("/auth/google/callback", passport.authenticate("google", { session: false, assignProperty: "auth" }),
     async (req: Request, res: Response) => {
         try {
-            const user = req.oauth as userType;
-
-            if (!user) {
-                return res.redirect(`${process.env.CLIENT_ORIGIN}/sign-in?error=no_user`);
-            }
+            const user = req.auth as userType;
 
             const { accessToken, refreshToken } = await generateToken(user.id);
 
-            return res
-                .status(200)
+            res.status(200)
+            res.cookie("accessToken", accessToken, option.access)
+            res.cookie("refreshToken", refreshToken, option.refresh)
+
+            return res.status(200)
                 .cookie("accessToken", accessToken, option.access)
                 .cookie("refreshToken", refreshToken, option.refresh)
-                .redirect(process.env.CLIENT_ORIGIN!);
-
+                .redirect(CLIENT_URL)
 
         } catch (error) {
             console.error("GitHub login error:", error);
-            res.redirect(
-                `${process.env.CLIENT_ORIGIN}/sign-in?error=oauth_failed`
-            );
+            return res.redirect(CLIENT_URL)
         }
     }
 );

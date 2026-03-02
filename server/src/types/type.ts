@@ -12,7 +12,6 @@ export interface Page extends Document {
     parent: Types.ObjectId | null;
     favorite: boolean;
     authorId: Types.ObjectId;
-    order: number;
     isArchived: boolean;
 
     createdAt: Date;

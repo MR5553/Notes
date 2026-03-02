@@ -4,7 +4,7 @@ declare global {
     namespace Express {
         export interface Request {
             user: userType;
-            oauth: userType;
+            auth: userType;
         }
         interface User extends userType { }
     }
