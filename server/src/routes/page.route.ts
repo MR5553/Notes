@@ -4,7 +4,8 @@ import {
     getAllPages,
     getPageById,
     updatePage,
-    archivePage,
+    unArchivePage,
+    getAllArchivePages,
     movePage,
     duplicatePage,
     deletePageById,
@@ -17,7 +18,8 @@ router.post("/pages", verifyJwtToken, createPage);
 router.get("/pages", verifyJwtToken, getAllPages);
 router.get("/pages/:pageId", verifyJwtToken, getPageById);
 router.patch("/pages/:pageId", verifyJwtToken, updatePage);
-router.patch("/pages/:pageId/archive", verifyJwtToken, archivePage);
+router.get("/pages/archived", verifyJwtToken, getAllArchivePages);
+router.patch("/pages/:pageId/un-archive", verifyJwtToken, unArchivePage);
 router.patch("/pages/:pageId/move", verifyJwtToken, movePage);
 router.post("/pages/:pageId/duplicate", verifyJwtToken, duplicatePage);
 router.delete("/pages/:pageId", verifyJwtToken, deletePageById);

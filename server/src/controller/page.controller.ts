@@ -6,37 +6,52 @@ import { Blocks } from "../models/block.model";
 
 const createPage = async (req: Request, res: Response) => {
     try {
-        const { parent } = req.body;
+        const { parent, isFavorite } = req.body;
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized",
+            });
+        }
+
+        if (parent) {
+            if (!Types.ObjectId.isValid(parent)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid parentId",
+                });
+            }
+
+            const parentPage = await Pages.findOne({
+                _id: parent,
+                authorId: userId,
+            });
+
+            if (!parentPage) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Parent page not found",
+                });
+            }
+        }
 
         const page = await Pages.create({
             title: "Untitled",
             parent: parent || null,
-            authorId: req.user?.id,
+            isFavorite: !!isFavorite,
+            authorId: userId,
         });
 
-        if (!page) {
-            return res.status(400).json({
-                success: false,
-                message: "Error while creating page."
-            });
-        }
-
-        const block = await Blocks.create({
+        await Blocks.create({
             pageId: page.id,
-            content: page.title
-        })
-
-        if (!block) {
-            return res.status(404).json({
-                success: false,
-                message: "Error while creating block for this page."
-            });
-        }
+            content: page.title,
+        });
 
         return res.status(201).json({
-            page,
             success: true,
-            message: "Page created successfully."
+            page,
         });
 
     } catch (error) {
@@ -114,7 +129,9 @@ const getPageById = async (req: Request, res: Response) => {
 const updatePage = async (req: Request, res: Response) => {
     try {
         const pageId = req.params.pageId as string;
-        const { title, icon, cover, favorite } = req.body;
+        const userId = req.user?.id;
+
+        const { title, icon, cover, isFavorite, isArchived } = req.body;
 
         if (!Types.ObjectId.isValid(pageId)) {
             return res.status(400).json({
@@ -128,7 +145,8 @@ const updatePage = async (req: Request, res: Response) => {
         if (title !== undefined) payload.title = title;
         if (icon !== undefined) payload.icon = icon;
         if (cover !== undefined) payload.cover = cover;
-        if (favorite !== undefined) payload.favorite = favorite;
+        if (isFavorite !== undefined) payload.isFavorite = isFavorite;
+        if (isArchived !== undefined) payload.isArchived = isArchived;
 
         if (!Object.keys(payload).length) {
             return res.status(400).json({
@@ -138,15 +156,8 @@ const updatePage = async (req: Request, res: Response) => {
         }
 
         const updated = await Pages.findOneAndUpdate(
-            {
-                _id: pageId,
-                authorId: req.user?.id
-            },
-            {
-                $set: {
-                    payload
-                }
-            },
+            { _id: pageId, authorId: userId },
+            { $set: payload },
             { new: true, runValidators: true }
         );
 
@@ -160,14 +171,13 @@ const updatePage = async (req: Request, res: Response) => {
         return res.status(200).json({
             success: true,
             page: updated,
-            message: "Page updated successfully.",
         });
 
     } catch (error) {
         console.error(error);
         return res.status(500).json({
             success: false,
-            message: "An internal server error occurred.",
+            message: "Internal server error",
         });
     }
 };
@@ -215,7 +225,7 @@ const duplicatePage = async (req: Request, res: Response) => {
             authorId: page.authorId,
             icon: page.icon,
             cover: page.cover,
-            favorite: page.favorite
+            isFavorite: page.isFavorite
         }], { session });
 
         await Blocks.create([{
@@ -247,102 +257,73 @@ const duplicatePage = async (req: Request, res: Response) => {
 
 const movePage = async (req: Request, res: Response) => {
     try {
+        const parentId = req.body.parentId as string;
         const pageId = req.params.pageId as string;
-        const { parentId } = req.body;
+        const userId = req.user?.id;
 
         if (!Types.ObjectId.isValid(pageId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid pageId",
-            });
+            return res.status(400).json({ success: false, message: "Invalid pageId" });
         }
 
         if (parentId && !Types.ObjectId.isValid(parentId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid parentId",
-            });
+            return res.status(400).json({ success: false, message: "Invalid parentId" });
         }
 
         if (parentId === pageId) {
-            return res.status(400).json({
-                success: false,
-                message: "Page cannot be its own parent",
-            });
+            return res.status(400).json({ success: false, message: "Cannot self-parent" });
+        }
+
+        if (parentId) {
+            const cycle = await descendent(new Types.ObjectId(pageId), new Types.ObjectId(parentId));
+
+            if (cycle) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Cannot move page inside its descendant",
+                });
+            }
         }
 
         const updated = await Pages.findOneAndUpdate(
-            {
-                _id: pageId,
-                authorId: req.user?.id,
-            },
-            {
-                parent: parentId || null,
-            },
+            { _id: pageId, authorId: userId },
+            { parent: parentId || null },
             { new: true }
         );
-
-        if (!updated) {
-            return res.status(404).json({
-                success: false,
-                message: "Page not found",
-            });
-        }
 
         return res.status(200).json({
             success: true,
             page: updated,
-            message: "Page moved successfully",
         });
 
     } catch (error) {
         console.error(error);
         return res.status(500).json({
             success: false,
-            message: "An internal server error occurred.",
+            message: "Internal server error",
         });
     }
 };
 
 
-const archivePage = async (req: Request, res: Response) => {
+const getAllArchivePages = async (req: Request, res: Response) => {
     try {
-        const pageId = req.params.pageId as string;
+        const userId = req.user?.id;
 
-        if (!Types.ObjectId.isValid(pageId)) {
-            return res.status(400).json({
+        if (!userId) {
+            return res.status(401).json({
                 success: false,
-                message: "Invalid pageId",
+                message: "Unauthorized",
             });
         }
 
-        const archived = await Pages.findOneAndUpdate(
-            {
-                _id: pageId,
-                authorId: req.user?.id,
-            },
-            {
-                isArchived: true,
-            },
-            {
-                new: true,
-                runValidators: true,
-            }
-        );
-
-        if (!archived) {
-            return res.status(404).json({
-                success: false,
-                message: "Page not found",
-            });
-        }
-
-        await archiveChildren(archived.id);
+        const archivedPages = await Pages.find({
+            authorId: userId,
+            isArchived: true,
+        }).sort({ updatedAt: -1 });
 
         return res.status(200).json({
             success: true,
-            page: archived,
-            message: "Page archived successfully",
+            pages: archivedPages,
         });
 
     } catch (error) {
@@ -352,12 +333,21 @@ const archivePage = async (req: Request, res: Response) => {
             message: "An internal server error occurred.",
         });
     }
+
 };
 
 
-const restorePage = async (req: Request, res: Response) => {
+const unArchivePage = async (req: Request, res: Response) => {
     try {
         const pageId = req.params.pageId as string;
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized",
+            });
+        }
 
         if (!Types.ObjectId.isValid(pageId)) {
             return res.status(400).json({
@@ -367,17 +357,9 @@ const restorePage = async (req: Request, res: Response) => {
         }
 
         const restored = await Pages.findOneAndUpdate(
-            {
-                _id: pageId,
-                authorId: req.user?.id,
-            },
-            {
-                isArchived: false,
-            },
-            {
-                new: true,
-                runValidators: true,
-            }
+            { _id: pageId, authorId: userId },
+            { $set: { isArchived: false } },
+            { new: true, runValidators: true }
         );
 
         if (!restored) {
@@ -399,15 +381,20 @@ const restorePage = async (req: Request, res: Response) => {
         console.error(error);
         return res.status(500).json({
             success: false,
-            message: "An internal server error occurred.",
+            message: "Internal server error",
         });
     }
 };
 
 
 const deletePageById = async (req: Request, res: Response) => {
+    const session = await Pages.startSession();
+
     try {
+        session.startTransaction();
+
         const pageId = req.params.pageId as string;
+        const userId = req.user?.id;
 
         if (!Types.ObjectId.isValid(pageId)) {
             return res.status(400).json({
@@ -418,8 +405,8 @@ const deletePageById = async (req: Request, res: Response) => {
 
         const page = await Pages.findOne({
             _id: pageId,
-            authorId: req.user?.id,
-        });
+            authorId: userId,
+        }).session(session);
 
         if (!page) {
             return res.status(404).json({
@@ -428,56 +415,39 @@ const deletePageById = async (req: Request, res: Response) => {
             });
         }
 
-        await deleteChildren(page.id);
-        await Blocks.deleteOne({ pageId: page.id });
-        await Pages.deleteOne({ _id: page.id });
+        await deleteChildren(page.id, session);
+        await Blocks.deleteOne({ pageId: page.id }).session(session);
+        await Pages.deleteOne({ _id: page.id }).session(session);
+
+        await session.commitTransaction();
 
         return res.status(200).json({
             success: true,
-            message: "Page deleted successfully",
+            message: "Deleted successfully",
         });
 
     } catch (error) {
+        await session.abortTransaction();
         console.error(error);
         return res.status(500).json({
             success: false,
-            message: "An internal server error occurred.",
+            message: "Internal server error",
         });
+    } finally {
+        session.endSession();
     }
 };
 
-const deleteChildren = async (parentId: Types.ObjectId) => {
-    const children = await Pages.find(
-        { parent: parentId },
-        { _id: 1 }
-    );
-
-    if (!children.length) return;
+const deleteChildren = async (parentId: Types.ObjectId, session: any) => {
+    const children = await Pages.find({ parent: parentId }).session(session);
 
     for (const child of children) {
-        await deleteChildren(child._id);
-        await Blocks.deleteOne({ pageId: child._id });
-        await Pages.deleteOne({ _id: child._id });
+        await deleteChildren(child.id, session);
+        await Blocks.deleteOne({ pageId: child.id }).session(session);
+        await Pages.deleteOne({ _id: child.id }).session(session);
     }
 };
 
-const archiveChildren = async (parentId: Types.ObjectId) => {
-    const children = await Pages.find(
-        { parent: parentId },
-        { _id: 1 }
-    );
-
-    if (!children.length) return;
-
-    for (const child of children) {
-        await Pages.updateOne(
-            { _id: child._id },
-            { isArchived: true }
-        );
-
-        await archiveChildren(child._id);
-    }
-};
 
 const restoreChildren = async (parentId: Types.ObjectId) => {
     const children = await Pages.find(
@@ -499,14 +469,27 @@ const restoreChildren = async (parentId: Types.ObjectId) => {
     }
 };
 
+const descendent = async (pageId: Types.ObjectId, parentId: Types.ObjectId): Promise<boolean> => {
+    const children = await Pages.find({ parent: pageId }, { _id: 1 });
+
+    for (const child of children) {
+        if (child.id.equals(parentId)) return true;
+
+        const result = await descendent(child.id, parentId);
+        if (result) return true;
+    }
+
+    return false;
+};
+
 
 export {
     createPage,
     getAllPages,
     getPageById,
     updatePage,
-    archivePage,
-    restorePage,
+    getAllArchivePages,
+    unArchivePage,
     movePage,
     duplicatePage,
     deletePageById,

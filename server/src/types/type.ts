@@ -10,7 +10,7 @@ export interface Page extends Document {
     icon?: string | null;
     cover?: string | null;
     parent: Types.ObjectId | null;
-    favorite: boolean;
+    isFavorite: boolean;
     authorId: Types.ObjectId;
     isArchived: boolean;
 

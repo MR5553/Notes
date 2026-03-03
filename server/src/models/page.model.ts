@@ -11,7 +11,7 @@ const pageSchema = new Schema<Page>({
         type: String,
         default: null,
     },
-    favorite: {
+    isFavorite: {
         type: Boolean,
         default: false,
     },
