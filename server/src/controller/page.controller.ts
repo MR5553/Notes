@@ -87,45 +87,6 @@ const getAllPages = async (req: Request, res: Response) => {
 };
 
 
-const getPageById = async (req: Request, res: Response) => {
-    try {
-        const pageId = req.params.pageId as string;
-
-        if (!Types.ObjectId.isValid(pageId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid pageId"
-            });
-        }
-
-        const page = await Pages.findOne({
-            _id: pageId,
-            authorId: req.user?.id,
-        });
-
-        if (!page) {
-            return res.status(404).json({
-                success: false,
-                message: "Page not found"
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            page,
-            message: "Page fetched successfully."
-        });
-
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            success: false,
-            message: "An internal server error occurred.",
-        });
-    }
-};
-
-
 const updatePage = async (req: Request, res: Response) => {
     try {
         const pageId = req.params.pageId as string;
@@ -486,7 +447,6 @@ const descendent = async (pageId: Types.ObjectId, parentId: Types.ObjectId): Pro
 export {
     createPage,
     getAllPages,
-    getPageById,
     updatePage,
     getAllArchivePages,
     unArchivePage,

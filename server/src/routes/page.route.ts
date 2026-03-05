@@ -2,7 +2,6 @@ import { Router } from "express";
 import {
     createPage,
     getAllPages,
-    getPageById,
     updatePage,
     unArchivePage,
     getAllArchivePages,
@@ -16,7 +15,6 @@ const router = Router();
 
 router.post("/pages", verifyJwtToken, createPage);
 router.get("/pages", verifyJwtToken, getAllPages);
-router.get("/pages/:pageId", verifyJwtToken, getPageById);
 router.patch("/pages/:pageId", verifyJwtToken, updatePage);
 router.get("/pages/archived", verifyJwtToken, getAllArchivePages);
 router.patch("/pages/:pageId/un-archive", verifyJwtToken, unArchivePage);

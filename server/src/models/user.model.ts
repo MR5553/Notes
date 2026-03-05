@@ -29,7 +29,7 @@ const userSchema = new Schema<userType>({
                 enum: ["google", "github", "local"],
                 default: "local"
             },
-            providerId: { type: String }, // e.g., the Google 'sub' or GitHub 'id'
+            providerId: { type: String },
         }
     ],
     avatar: {
