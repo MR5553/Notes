@@ -7,23 +7,24 @@ export const ButtonVariants = cva(
     {
         variants: {
             variant: {
-                default: "text-white bg-linear-to-r from-blue-500 via-blue-600 to-blue-700 shadow-lg shadow-blue-500/20 disabled:opacity-50",
+                default: "bg-layer-3 text-primary hover:bg-layer-4 border border-border-subtle",
                 lime: "text-gray-900 bg-linear-to-r from-lime-200 via-lime-400 to-lime-500 shadow-lg shadow-lime-500/20",
-                destructive: "bg-red-100 text-red-600 hover:bg-red-200",
-                outlined: "bg-neutral-100 border border-neutral-200 hover:border-neutral-400",
-                ghost: "text-neutral-600 hover:bg-[#f2f1f0]",
+                destructive: "bg-danger text-primary hover:opacity-90",
+                outlined: "bg-layer-1 border border-border-default text-primary hover:bg-layer-2",
+                ghost: "text-secondary hover:bg-layer-4",
                 link: "text-primary underline-offset-4 hover:underline",
-                icon: "hover:bg-[#f2f1f0] outline outline-transparent",
+                icon: "text-secondary hover:bg-layer-2 outline outline-transparent",
             },
             size: {
                 default: "px-4 py-2.5 text-sm rounded-xl",
                 sm: "px-2 py-1 text-sm justify-start",
                 lg: "px-6 py-3 text-base",
-                icon: "px-2 py-1 rounded-xl"
+                icon: "p-2 rounded-[10px]",
+                icon_sm: "min-h-4 rounded p-0"
             },
             state: {
                 default: "",
-                active: "bg-blue-100 text-blue-600 outline-blue-200",
+                active: "bg-green-100 text-green-600 outline-border-default",
             },
         },
         defaultVariants: {
