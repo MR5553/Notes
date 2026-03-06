@@ -1,21 +1,21 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
-import { useState } from "react";
-import { cn } from "../lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { schema } from "../lib/schema";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../store/auth.store";
-import Input from "../components/Field";
+import { Field } from "../components/Field";
+import SocialSignIn from "../components/SocialSignIn";
+import { RiAtLine } from "react-icons/ri";
+import { RiUser3Line as User } from "react-icons/ri";
 import type z from "zod";
-import OAuth from "../components/OAuth";
 
 
 type SignupForm = z.infer<typeof schema.signup>;
 
 export default function Signup() {
     const { Signup } = useAuth();
-    const [visible, setVisible] = useState<boolean>(false);
+
 
     const { register, handleSubmit, formState: { errors, isValid, isDirty, isSubmitting } } = useForm<SignupForm>({
         resolver: zodResolver(schema.signup),
@@ -38,61 +38,55 @@ export default function Signup() {
             <header>
                 <title>Sign up</title>
                 <h1 className="text-3xl font-bold tracking-wider">Sign up for Notion</h1>
-                <p className="text-sm text-neutral-500 leading-relaxed mt-2">
+                <p className="text-sm text-secondary leading-relaxed mt-2">
                     Create your account to start organizing and building your ideas with ease.
                 </p>
             </header>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="grid gap-5">
-                <div>
-                    <Input
-                        type="text"
-                        placeholder="John Doe"
-                        start={<i className="ri-user-line" />}
-                        {...register("name")}
-                    />
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+                <Field>
+                    <Field.Label>Name</Field.Label>
+                    <Field.Control>
+                        <Field.Icon children={<User />} />
+                        <Field.Input
+                            type="text"
+                            placeholder="John Doe"
+                            {...register("name")}
+                        />
+                    </Field.Control>
+
                     {errors.name && (
-                        <span className="text-xs text-red-500">{errors.name.message}</span>
+                        <Field.Message type="error" children={errors.name.message} />
                     )}
-                </div>
+                </Field>
 
-                <div>
-                    <Input
-                        type="email"
-                        placeholder="john@gmail.com"
-                        start={<i className="ri-at-line" />}
-                        {...register("email")}
-                    />
+                <Field>
+                    <Field.Label>Email</Field.Label>
+                    <Field.Control>
+                        <Field.Icon children={<RiAtLine />} />
+                        <Field.Input
+                            type="email"
+                            placeholder="john@gmail.com"
+                            {...register("email")}
+                        />
+                    </Field.Control>
+
                     {errors.email && (
-                        <span className="text-xs text-red-500">{errors.email.message}</span>
+                        <Field.Message type="error" children={errors.email.message} />
                     )}
-                </div>
+                </Field>
 
-                <div>
-                    <Input
-                        type={visible ? "text" : "password"}
+                <Field>
+                    <Field.Label>Password</Field.Label>
+                    <Field.Password
                         placeholder="John@12345"
-                        start={<i className="ri-key-2-line" />}
-                        end={
-                            <button
-                                type="button"
-                                onClick={() => setVisible((v) => !v)}
-                                className="cursor-pointer focus:outline-none"
-                            >
-                                <i
-                                    className={cn({
-                                        "ri-eye-off-line": !visible,
-                                        "ri-eye-line": visible,
-                                    })}
-                                />
-                            </button>
-                        }
                         {...register("password")}
                     />
+
                     {errors.password && (
-                        <span className="text-xs text-red-500">{errors.password.message}</span>
+                        <Field.Message type="error" children={errors.password.message} />
                     )}
-                </div>
+                </Field>
 
                 <Button
                     type="submit"
@@ -106,17 +100,17 @@ export default function Signup() {
 
             <div className="flex items-center">
                 <div className="flex-1 h-px bg-linear-to-r via-neutral-600 to-transparent" />
-                <span className="text-xs text-neutral-400">AUTHORIZE WITH</span>
+                <span className="text-xs text-muted">AUTHORIZE WITH</span>
                 <div className="flex-1 h-px bg-linear-to-r via-neutral-600 to-transparent" />
             </div>
 
-            <OAuth />
+            <SocialSignIn />
 
-            <p className="text-center text-sm text-neutral-400">
+            <p className="text-center text-sm text-secondary leading-relaxed">
                 Already have an account?
                 <Link
                     to="/sign-in"
-                    className="underline underline-offset-4 text-black ml-1"
+                    className="underline underline-offset-4 text-primary ml-1"
                 >
                     Sign in
                 </Link>
