@@ -1,26 +1,26 @@
 import { Router } from "express";
 import {
     createPage,
-    getAllPages,
+    getPages,
     updatePage,
-    unArchivePage,
-    getAllArchivePages,
+    updateArchive,
+    getArchivePages,
     movePage,
     duplicatePage,
-    deletePageById,
+    deletePage,
 } from "../controller/page.controller";
 import { verifyJwtToken } from "../middleware/auth.middleware";
 
 const router = Router();
 
+router.get("/pages", verifyJwtToken, getPages);
+router.get("/pages/archived", verifyJwtToken, getArchivePages);
 router.post("/pages", verifyJwtToken, createPage);
-router.get("/pages", verifyJwtToken, getAllPages);
 router.patch("/pages/:pageId", verifyJwtToken, updatePage);
-router.get("/pages/archived", verifyJwtToken, getAllArchivePages);
-router.patch("/pages/:pageId/un-archive", verifyJwtToken, unArchivePage);
+router.patch("/pages/:pageId/archive", verifyJwtToken, updateArchive);
 router.patch("/pages/:pageId/move", verifyJwtToken, movePage);
 router.post("/pages/:pageId/duplicate", verifyJwtToken, duplicatePage);
-router.delete("/pages/:pageId", verifyJwtToken, deletePageById);
+router.delete("/pages/:pageId", verifyJwtToken, deletePage);
 
 
 
