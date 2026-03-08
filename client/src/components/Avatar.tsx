@@ -51,7 +51,7 @@ export function Avatar({ children, className, size, ...props }: AvatarProps) {
         <AvatarContext.Provider value={{ size: AvatarSize, status, setStatus }}>
             <div
                 className={
-                    cn("relative flex shrink-0 overflow-hidden rounded-xl bg-layer-3 border border-border-default",
+                    cn("relative flex shrink-0 overflow-hidden rounded-xl bg-secondry border border-border",
                         avatarSizes[AvatarSize],
                         className
                     )
@@ -94,8 +94,7 @@ export function AvatarFallback({ children, className, ...props }: AvatarFallback
 
     return (
         <div
-            className={cn(
-                "size-full grid place-content-center font-medium leading-none",
+            className={cn("size-full text-primary grid place-content-center font-medium leading-none",
                 avatarSizes[ctx.size],
                 className
             )}
