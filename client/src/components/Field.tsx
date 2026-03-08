@@ -47,7 +47,7 @@ export function Field({ children }: { children: ReactNode }) {
 export function FieldControl({ children }: { children: ReactNode }) {
     return (
         <div
-            className="flex items-center gap-2 w-full rounded-xl bg-layer-2 border border-border-default px-2.5 py-2 hover:border-border-strong focus-within:border-border-strong"
+            className="flex items-center gap-2 w-full rounded-xl bg-foreground border border-border px-2.5 py-2 hover:border-muted focus-within:border-muted"
         >
             {children}
         </div>
@@ -60,7 +60,7 @@ export function FieldLabel({ children }: { children: ReactNode }) {
     return (
         <label
             htmlFor={id}
-            className="text-sm font-medium text-secondary px-1"
+            className="text-sm font-medium text-muted px-1"
         >
             {children}
         </label>
@@ -88,8 +88,8 @@ export function FieldMessage({ children, type = "description", ...props }: Field
             id={`${id}-message`}
             className={cn(
                 "text-xs",
-                type === "description" && "text-secondary",
-                type === "error" && "text-danger"
+                type === "description" && "text-muted",
+                type === "error" && "text-text-destructive"
             )}
             {...props}
         >
@@ -109,7 +109,7 @@ export function FieldInput({ name, type, value, placeholder, className, ...props
             value={value}
             placeholder={placeholder}
             autoComplete="off"
-            className={cn("flex-1 bg-transparent outline-none text-sm text-secondary placeholder:text-muted", className)}
+            className={cn("flex-1 bg-transparent outline-none text-sm text-primary placeholder:text-muted", className)}
             {...props}
         />
     )
