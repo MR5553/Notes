@@ -88,7 +88,7 @@ export default function Otp({ length, onOtpChange, ...props }: Props) {
                     onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => handleKeyDown(e, index)}
                     ref={(input) => { ref.current[index] = input! }}
                     onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange(e, index)}
-                    className="size-12 md:size-11 leading-12 bg-neutral-100 text-center text-base font-medium rounded-2xl border border-neutral-200 hover:border-neutral-400"
+                    className="size-11 bg-secondry text-primary text-center text-xl font-medium rounded-xl border border-border hover:border-muted"
                     {...props}
                 />
             ))}
