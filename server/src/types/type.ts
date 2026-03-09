@@ -5,6 +5,11 @@ export interface jwtToken extends JwtPayload {
     id: string;
 }
 
+export interface jwtActionToken extends JwtPayload {
+    id: string;
+    purpose: string;
+}
+
 export interface Page extends Document {
     title: string;
     icon?: string | null;
@@ -39,6 +44,7 @@ export interface userType extends Document {
 
     generateRefreshToken(): string;
     generateAccessToken(): string;
+    generateActionToken(purpose: string): string;
     verifyPassword(password: string): Promise<boolean>;
     verifyOtp(otp: string): Promise<boolean>;
 }

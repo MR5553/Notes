@@ -16,9 +16,9 @@ export async function verifyJwtToken(req: Request, res: Response, next: NextFunc
         }
 
         const secret = process.env.ACCESS_TOKEN_SECRET as string;
-        const decoded = jwt.verify(token, secret) as jwtToken;
+        const payload = jwt.verify(token, secret) as jwtToken;
 
-        const user = await Users.findById(decoded.id);
+        const user = await Users.findById(payload.id);
 
         if (!user) {
             return res.status(401).json({

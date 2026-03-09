@@ -6,11 +6,11 @@ import {
     Signup,
     Signin,
     VerifyEmail,
-    resendOtp,
+    ResendOtp,
 
     forgetPassword,
     verifyResetPasswordOtp,
-    resetPassword,
+    ResetPassword,
     changePassword,
 
     getProfile,
@@ -30,11 +30,11 @@ const router = Router();
 router.post("/auth/sign-up", limiter.auth, validate(schema.signup), Signup);
 router.post("/auth/sign-in", limiter.auth, validate(schema.signin), Signin);
 router.post("/auth/verify-email/:email", limiter.auth, validate(schema.verifyEmail), VerifyEmail);
-router.post("/auth/resend-otp/:email", limiter.auth, resendOtp);
+router.post("/auth/resend-otp/:email", limiter.auth, ResendOtp);
 
 router.post("/password/forgot", validate(schema.email), forgetPassword);
 router.post("/password/verify-otp/:email", validate(schema.verifyEmail), verifyResetPasswordOtp);
-router.post("/password/reset/:email", validate(schema.resetPassword), resetPassword);
+router.post("/password/reset/:email", validate(schema.resetPassword), ResetPassword);
 router.post("/password/change", validate(schema.changePassword), changePassword);
 
 router.get("/users/me", verifyJwtToken, getProfile);

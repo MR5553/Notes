@@ -3,8 +3,9 @@ import jwt from "jsonwebtoken";
 import { randomInt } from "node:crypto"
 import { Users } from "../models/user.model";
 import { generateToken, option } from "../lib/utils";
-import type { jwtToken, userType } from "../types/type";
+import type { jwtActionToken, jwtToken, userType } from "../types/type";
 import { Pages } from "../models/page.model";
+import { Blocks } from "../models/block.model";
 
 
 const Signup = async (req: Request, res: Response) => {
@@ -20,13 +21,13 @@ const Signup = async (req: Request, res: Response) => {
             });
         }
 
-        const otp = randomInt(100000, 1000000);
+        const otp = String(randomInt(100000, 1000000));
 
         const user = await Users.create({
             name: name,
             email: email,
             password: password,
-            otp,
+            otp: otp,
         })
 
         if (!user) {
@@ -68,10 +69,16 @@ const Signin = async (req: Request, res: Response) => {
         }
 
         if (!user.verified) {
+            const token = user.generateActionToken("email_verify");
+            const otp = String(randomInt(100000, 1000000));
+
+            user.otp = otp;
+            await user.save();
+
             return res.status(403).json({
-                userId: user.id,
                 success: false,
-                message: "Your email is not verified. Please check your inbox.",
+                token: token,
+                message: "Your email is not verified. A new verification code has been sent.",
             });
         }
 
@@ -105,14 +112,24 @@ const Signin = async (req: Request, res: Response) => {
 
 const VerifyEmail = async (req: Request, res: Response) => {
     try {
-        const { otp } = req.body;
+        const { otp, token } = req.body;
 
-        const user = await Users.findById(req.params.id).select("+otp +otpExpiry");
+        const secret = process.env.ACTION_TOKEN_SECRET as string;
+        const payload = jwt.verify(token, secret) as jwtActionToken;
+
+        if (payload.purpose !== "email_verify") {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid verification token."
+            });
+        }
+
+        const user = await Users.findById(payload.id).select("+otp +otpExpiry");
 
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found."
+                message: "Error while fetching data."
             });
         }
 
@@ -139,15 +156,15 @@ const VerifyEmail = async (req: Request, res: Response) => {
 
         const { accessToken, refreshToken } = await generateToken(user.id);
 
-        const updatedUser = await Users.findByIdAndUpdate(
-            user.id,
+        const updatedUser = await Users.findByIdAndUpdate(user.id,
             {
                 $set: {
                     verified: true,
                 },
                 $unset: {
                     otp: 1,
-                    otpExpiry: 1
+                    otpExpiry: 1,
+                    token: 1
                 },
             },
             { new: true }
@@ -172,32 +189,36 @@ const VerifyEmail = async (req: Request, res: Response) => {
 }
 
 
-const resendOtp = async (req: Request, res: Response) => {
+const ResendOtp = async (req: Request, res: Response) => {
     try {
-        const user = await Users.findByIdAndUpdate(
-            { email: req.params.id },
+        const { token } = req.body;
+
+        const secret = process.env.ACTION_TOKEN_SECRET as string;
+        const payload = jwt.verify(token, secret) as jwtActionToken;
+        const otp = String(randomInt(100000, 1000000));
+
+        if (!payload) {
+            return res.status(404).json({
+                success: false,
+                message: "Invalid verification token."
+            });
+        }
+
+        await Users.findByIdAndUpdate(payload.id,
             {
                 $set: {
-                    otp: randomInt(100000, 1000000),
+                    otp: otp,
                 },
             },
             { new: true }
         );
 
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found."
-            });
-        }
-
         //await sendOtpEmail(user.email, user.otp);
 
         return res.status(200).json({
             success: true,
-            message: "New verfication code has been sent.",
+            message: "New otp code has been sent.",
         });
-
 
     } catch (error) {
         console.error(error);
@@ -248,15 +269,17 @@ const forgetPassword = async (req: Request, res: Response) => {
         }
 
         const otp = String(randomInt(100000, 1000000));
+        const token = user.generateActionToken("forget_password");
 
         user.otp = otp;
-        await user.save({ validateBeforeSave: false });
+        await user.save();
 
         // send resetPasswordOtp(otp)
 
         return res.status(200).json({
             success: true,
-            message: `An instruction sent to ${user.email}`,
+            token: token,
+            message: `Otp has been sent to ${user.email}`,
         });
 
     } catch (error) {
@@ -271,14 +294,24 @@ const forgetPassword = async (req: Request, res: Response) => {
 
 const verifyResetPasswordOtp = async (req: Request, res: Response) => {
     try {
-        const { otp } = req.body;
+        const { otp, token } = req.body;
 
-        const user = await Users.findOne({ email: req.params.email }).select("+otp +otpExpiry");
+        const secret = process.env.ACTION_TOKEN_SECRET as string;
+        const payload = jwt.verify(token, secret) as jwtActionToken;
+
+        if (payload.purpose !== "forget_password") {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid verification token."
+            });
+        }
+
+        const user = await Users.findById(payload.id).select("+otp +otpExpiry");
 
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found."
+                message: "Error while fetching data."
             });
         }
 
@@ -296,8 +329,7 @@ const verifyResetPasswordOtp = async (req: Request, res: Response) => {
             });
         }
 
-        await Users.findByIdAndUpdate(
-            user.id,
+        await Users.findByIdAndUpdate(user.id,
             {
                 $unset: {
                     otp: 1,
@@ -307,9 +339,12 @@ const verifyResetPasswordOtp = async (req: Request, res: Response) => {
             { new: true }
         ) as userType;
 
+        const password_reset = user.generateActionToken("password_reset");
+
         return res.status(201).json({
             success: true,
-            message: "Verified successfully, now reset password."
+            token: password_reset,
+            message: "Otp verified successfully, now reset password."
         });
 
     } catch (error) {
@@ -322,20 +357,31 @@ const verifyResetPasswordOtp = async (req: Request, res: Response) => {
 }
 
 
-const resetPassword = async (req: Request, res: Response) => {
+const ResetPassword = async (req: Request, res: Response) => {
     try {
-        const { password } = req.body;
+        const { password, token } = req.body;
 
-        const user = await Users.findById(req.params.id) as userType;
+        const secret = process.env.ACTION_TOKEN_SECRET as string;
+        const payload = jwt.verify(token, secret) as jwtActionToken;
+
+        if (payload.purpose !== "password_reset") {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid reset token."
+            });
+        }
+
+        const user = await Users.findById(payload.id) as userType;
 
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: "No such user found with this email."
+                message: "Error while fetching data."
             });
         }
 
         user.password = password;
+        user.refreshToken = null;
         await user.save({ validateBeforeSave: true });
 
         return res.status(200).json({
@@ -364,7 +410,8 @@ const refreshAccessToken = async (req: Request, res: Response) => {
             });
         }
 
-        const payload = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string) as jwtToken;
+        const secret = process.env.REFRESH_TOKEN_SECRET as string;
+        const payload = jwt.verify(token, secret) as jwtToken;
 
         const user = await Users.findById(payload.id).select("+refreshToken");
 
@@ -461,6 +508,7 @@ const deleteAccount = async (req: Request, res: Response) => {
         }
 
         await Pages.deleteMany({ authorId: user.id });
+        await Blocks.deleteMany({ authorId: user.id });
         await user.deleteOne();
 
         return res.status(200).json({
@@ -478,7 +526,35 @@ const deleteAccount = async (req: Request, res: Response) => {
 }
 
 
-const updateProfile = async (_req: Request, _res: Response) => { }
+const updateProfile = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.id;
+        const { name, avatar } = req.body;
+
+        const user = await Users.findByIdAndUpdate(userId,
+            {
+                $set: {
+                    name,
+                    avatar,
+                },
+            },
+            { new: true }
+        ) as userType;
+
+        return res.status(200).json({
+            success: true,
+            user,
+            message: "Profile updated successfully."
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "An internal server error occurred."
+        });
+    }
+}
 
 
 const Logout = async (req: Request, res: Response) => {
@@ -517,11 +593,11 @@ export {
     Signup,
     Signin,
     VerifyEmail,
-    resendOtp,
+    ResendOtp,
 
     forgetPassword,
     verifyResetPasswordOtp,
-    resetPassword,
+    ResetPassword,
     changePassword,
 
     getProfile,

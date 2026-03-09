@@ -26,8 +26,7 @@ const userSchema = new Schema<userType>({
         {
             provider: {
                 type: String,
-                enum: ["google", "github", "local"],
-                default: "local"
+                enum: ["google", "github"],
             },
             providerId: { type: String },
         }
@@ -104,7 +103,7 @@ userSchema.methods.generateAccessToken = function () {
         },
         process.env.ACCESS_TOKEN_SECRET as string,
         {
-            expiresIn: "5h"
+            expiresIn: "30min"
         }
     );
 };
@@ -117,6 +116,19 @@ userSchema.methods.generateRefreshToken = function () {
         process.env.REFRESH_TOKEN_SECRET as string,
         {
             expiresIn: "7d"
+        }
+    );
+};
+
+userSchema.methods.generateActionToken = function (purpose: string) {
+    return jwt.sign(
+        {
+            id: this.id,
+            purpose
+        },
+        process.env.REFRESH_TOKEN_SECRET as string,
+        {
+            expiresIn: "10min"
         }
     );
 };
